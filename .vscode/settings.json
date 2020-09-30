@@ -1,0 +1,13 @@
+{
+    "go.formatTool": "gofmt",
+    "go.coverOnSingleTestFile": true,
+    "go.buildOnSave": "off",
+    "go.lintOnSave": "off",
+    "go.lintTool": "golangci-lint",
+    "go.vetOnSave": "off",
+    "go.gopath": "/Users/jeco/sdk/go1.15.2/bin/go",
+    "go.toolsEnvVars": {
+        "GO111MODULE": "on",
+        "GOFLAGS": "-mod=vendor"
+    }
+}

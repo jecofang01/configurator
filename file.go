@@ -18,7 +18,7 @@ type fileProvider struct {
 	filename string
 }
 
-func (p fileProvider) Provide(v interface{}) error {
+func (p fileProvider) Provide(v interface{}, _ StructInfo) error {
 	f, err := os.Open(p.filename)
 	if err != nil {
 		return err

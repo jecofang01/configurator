@@ -1,12 +1,7 @@
 package configurator
 
 import (
-	"errors"
 	"strings"
-)
-
-var (
-	ErrUnsupported = errors.New("unsupported")
 )
 
 type ConfiguratorOptions struct {
@@ -47,7 +42,7 @@ func WithDefaultProvider() ConfiguratorOption {
 }
 
 type Provider interface {
-	Provide(v interface{}) error
+	Provide(interface{}, StructInfo) error
 }
 
 func NewConfigurator(options ...ConfiguratorOption) *Configurator {
@@ -87,8 +82,12 @@ type Configurator struct {
 }
 
 func (c *Configurator) Load(v interface{}) error {
+	si, err := getStructInfo(v, nil)
+	if err != nil {
+		return err
+	}
 	for _, p := range c.providers {
-		if err := p.Provide(v); err != nil {
+		if err := p.Provide(v, si); err != nil {
 			return err
 		}
 	}
