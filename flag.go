@@ -46,8 +46,6 @@ func (p *flagProvider) Provide(v interface{}, si StructInfo) error {
 }
 
 var (
-	timePtrType     = reflect.TypeOf((*time.Time)(nil))
-	timeType        = reflect.TypeOf(time.Time{})
 	durationType    = reflect.TypeOf(time.Duration(0))
 	durationPtrType = reflect.TypeOf((*time.Duration)(nil))
 )
@@ -84,6 +82,16 @@ func createVarSetFunc(k string, val reflect.Value, typ reflect.Type) (func(), er
 		return createPtrSetFunc(k, val, typ)
 	case reflect.Slice:
 		return createSliceSetFunc(k, val, typ)
+	case reflect.Struct:
+		if typ == timeType {
+			var v timeValue
+			flag.Var(&v, k, "")
+			return func() {
+				t := time.Time(v)
+				val.Set(reflect.ValueOf(t))
+			}, nil
+		}
+		return nil, fmt.Errorf("flagProvider/createVarSetFunc: %w type [%s]", ErrUnsupported, typ.Kind().String())
 	default:
 		return nil, fmt.Errorf("flagProvider/createVarSetFunc: %w type [%s]", ErrUnsupported, typ.Kind().String())
 	}
@@ -175,6 +183,16 @@ func createPtrSetFunc(k string, val reflect.Value, typ reflect.Type) (func(), er
 		return func() {
 			val.Set(reflect.ValueOf(v))
 		}, nil
+	case reflect.Struct:
+		if typ == timePtrType {
+			var v timeValue
+			flag.Var(&v, k, "")
+			return func() {
+				t := time.Time(v)
+				val.Set(reflect.ValueOf(&t))
+			}, nil
+		}
+		return nil, fmt.Errorf("flagProvider/createPtrSetFunc: %w type [%s]", ErrUnsupported, typ.Kind().String())
 	default:
 		return nil, fmt.Errorf("flagProvider/createPtrSetFunc: %w type [%s]", ErrUnsupported, typ.Kind().String())
 	}
@@ -227,6 +245,21 @@ func createSliceSetFunc(k string, val reflect.Value, typ reflect.Type) (func(), 
 	default:
 		return nil, fmt.Errorf("flagProvider/createSliceSetFunc: %w type [%s]", ErrUnsupported, typ.Kind().String())
 	}
+}
+
+type timeValue time.Time
+
+func (t *timeValue) Get() interface{} { return time.Time(*t) }
+
+func (t *timeValue) String() string { return time.Time(*t).String() }
+
+func (t *timeValue) Set(v string) error {
+	tv, err := time.Parse(time.RFC3339, v)
+	if err != nil {
+		return err
+	}
+	*t = timeValue(tv)
+	return nil
 }
 
 type boolSliceValue []bool

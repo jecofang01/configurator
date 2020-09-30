@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
 type StructInfo interface {
@@ -90,6 +91,11 @@ func (f *fieldInfo) DefVal() string {
 	return ""
 }
 
+var (
+	timePtrType = reflect.TypeOf((*time.Time)(nil))
+	timeType    = reflect.TypeOf(time.Time{})
+)
+
 func getStructInfo(i interface{}, parent *fieldInfo) (*structInfo, error) {
 	v := reflect.ValueOf(i)
 	for v.Kind() != reflect.Ptr {
@@ -110,6 +116,15 @@ func getStructInfo(i interface{}, parent *fieldInfo) (*structInfo, error) {
 
 			// unexported fields
 			if !fv.CanSet() {
+				continue
+			}
+
+			if ft.Type == timeType || ft.Type == timePtrType {
+				fi, err := getFieldInfo(fv, ft, parent)
+				if err != nil {
+					return nil, err
+				}
+				si.fields = append(si.fields, fi)
 				continue
 			}
 

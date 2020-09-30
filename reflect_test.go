@@ -3,6 +3,7 @@ package configurator
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -74,6 +75,8 @@ func TestGetStructInfo(t *testing.T) {
 		MySQL      named
 		Debug      *namedPtr
 		unexported string
+		StartAt    time.Time  `config:"env,flag"`
+		Expire     *time.Time `config:"env,flag"`
 	}
 
 	cfg := &testStruct{}
@@ -81,7 +84,7 @@ func TestGetStructInfo(t *testing.T) {
 	si, err := getStructInfo(cfg, nil)
 
 	assert.NoError(t, err)
-	assert.Len(t, si.Fields(), 4)
+	assert.Len(t, si.Fields(), 6)
 
 	assert.Equal(t, "MYSQL_PORT", si.Fields()[0].ENVKey())
 	assert.Equal(t, "port", si.Fields()[0].FlagKey())
@@ -98,4 +101,14 @@ func TestGetStructInfo(t *testing.T) {
 	assert.Equal(t, "DEBUG_ENABLE", si.fields[3].ENVKey())
 	assert.Equal(t, "d", si.fields[3].FlagKey())
 	assert.Equal(t, "", si.Fields()[3].DefVal())
+
+	assert.Equal(t, "STARTAT", si.fields[4].ENVKey())
+	assert.Equal(t, "startat", si.fields[4].FlagKey())
+	assert.Equal(t, "", si.Fields()[4].DefVal())
+	assert.True(t, si.Fields()[4].StructField().Type == timeType)
+
+	assert.Equal(t, "EXPIRE", si.fields[5].ENVKey())
+	assert.Equal(t, "expire", si.fields[5].FlagKey())
+	assert.Equal(t, "", si.Fields()[5].DefVal())
+	assert.True(t, si.Fields()[5].StructField().Type == timePtrType)
 }

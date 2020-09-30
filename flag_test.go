@@ -42,6 +42,8 @@ func TestSetFunc(t *testing.T) {
 		F64ptr *float64       `config:"flag"`
 		S      string         `config:"flag"`
 		Sptr   *string        `config:"flag"`
+		E      time.Time      `config:"flag"`
+		Eptr   *time.Time     `config:"flag"`
 		Bs     []bool         `config:"flag"`
 		Bytes  []byte         `config:"flag"`
 	}
@@ -51,6 +53,7 @@ func TestSetFunc(t *testing.T) {
 		"-b=True", "-bptr=1", "-i=1", "-iptr=2", "-i8=3", "-i8ptr=4", "-i16=5", "-i16ptr=6", "-i32=7", "-i32ptr=8", "-i64=9", "-i64ptr=10",
 		"-t=2s", "-tptr=3ms", "-u=1", "-uptr=2", "-u8=3", "-u8ptr=4", "-u16=5", "-u16ptr=6", "-u32=7", "-u32ptr=8", "-u64=9", "-u64ptr=10",
 		"-f32=11", "-f32ptr=12", "-f64=13", "-f64ptr=14", "-s=a", "-sptr=b", "-bs=1", "-bs=0", "-bs=1", "-bytes=AQIDBAoL",
+		"-e=2020-09-30T22:51:49-08:00", "-eptr=2020-09-30T22:51:49-08:00",
 	}
 
 	si, err := getStructInfo(tt, nil)
@@ -60,6 +63,7 @@ func TestSetFunc(t *testing.T) {
 	err = fp.Provide(tt, si)
 	assert.NoError(t, err)
 
+	t.Logf("%+v", tt)
 	assert.Equal(t, &example{
 		B:      true,
 		Bptr:   b(true),
@@ -91,6 +95,8 @@ func TestSetFunc(t *testing.T) {
 		F64ptr: f64(float64(14)),
 		S:      "a",
 		Sptr:   s("b"),
+		E:      time.Date(2020, 9, 30, 22, 51, 49, 0, time.FixedZone("", -28800)),
+		Eptr:   timePtr(time.Date(2020, 9, 30, 22, 51, 49, 0, time.FixedZone("", -28800))),
 		Bs:     []bool{true, false, true},
 		Bytes:  []byte{0x01, 0x02, 0x03, 0x04, 0x0a, 0x0b},
 	}, tt)
@@ -129,3 +135,5 @@ func f64(v float64) *float64 { return &v }
 func s(v string) *string { return &v }
 
 func tptr(v time.Duration) *time.Duration { return &v }
+
+func timePtr(v time.Time) *time.Time { return &v }
