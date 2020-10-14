@@ -9,51 +9,62 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSetFunc(t *testing.T) {
+func TestFlagProvider(t *testing.T) {
 	resetForTesting()
 	type example struct {
-		B      bool           `config:"flag"`
-		Bptr   *bool          `config:"flag"`
-		I      int            `config:"flag"`
-		Iptr   *int           `config:"flag"`
-		I8     int8           `config:"flag"`
-		I8ptr  *int8          `config:"flag"`
-		I16    int16          `config:"flag"`
-		I16ptr *int16         `config:"flag"`
-		I32    int32          `config:"flag"`
-		I32ptr *int32         `config:"flag"`
-		I64    int64          `config:"flag"`
-		I64ptr *int64         `config:"flag"`
-		T      time.Duration  `config:"flag"`
-		Tptr   *time.Duration `config:"flag"`
-		U      uint           `config:"flag"`
-		Uptr   *uint          `config:"flag"`
-		U8     uint8          `config:"flag"`
-		U8ptr  *uint8         `config:"flag"`
-		U16    uint16         `config:"flag"`
-		U16ptr *uint16        `config:"flag"`
-		U32    uint32         `config:"flag"`
-		U32ptr *uint32        `config:"flag"`
-		U64    uint64         `config:"flag"`
-		U64ptr *uint64        `config:"flag"`
-		F32    float32        `config:"flag"`
-		F32ptr *float32       `config:"flag"`
-		F64    float64        `config:"flag"`
-		F64ptr *float64       `config:"flag"`
-		S      string         `config:"flag"`
-		Sptr   *string        `config:"flag"`
-		E      time.Time      `config:"flag"`
-		Eptr   *time.Time     `config:"flag"`
-		Bs     []bool         `config:"flag"`
-		Bytes  []byte         `config:"flag"`
+		B      bool            `config:"flag"`
+		Bptr   *bool           `config:"flag"`
+		I      int             `config:"flag"`
+		Iptr   *int            `config:"flag"`
+		I8     int8            `config:"flag"`
+		I8ptr  *int8           `config:"flag"`
+		I16    int16           `config:"flag"`
+		I16ptr *int16          `config:"flag"`
+		I32    int32           `config:"flag"`
+		I32ptr *int32          `config:"flag"`
+		I64    int64           `config:"flag"`
+		I64ptr *int64          `config:"flag"`
+		D      time.Duration   `config:"flag"`
+		Dptr   *time.Duration  `config:"flag"`
+		U      uint            `config:"flag"`
+		Uptr   *uint           `config:"flag"`
+		U8     uint8           `config:"flag"`
+		U8ptr  *uint8          `config:"flag"`
+		U16    uint16          `config:"flag"`
+		U16ptr *uint16         `config:"flag"`
+		U32    uint32          `config:"flag"`
+		U32ptr *uint32         `config:"flag"`
+		U64    uint64          `config:"flag"`
+		U64ptr *uint64         `config:"flag"`
+		F32    float32         `config:"flag"`
+		F32ptr *float32        `config:"flag"`
+		F64    float64         `config:"flag"`
+		F64ptr *float64        `config:"flag"`
+		S      string          `config:"flag"`
+		Sptr   *string         `config:"flag"`
+		T      time.Time       `config:"flag"`
+		Tptr   *time.Time      `config:"flag"`
+		Bs     []bool          `config:"flag"`
+		Bytes  []byte          `config:"flag"`
+		Is     []int           `config:"flag"`
+		I64s   []int64         `config:"flag"`
+		Ds     []time.Duration `config:"flag"`
+		Us     []uint          `config:"flag"`
+		U64s   []uint64        `config:"flag"`
+		F32s   []float32       `config:"flag"`
+		F64s   []float64       `config:"flag"`
+		Ss     []string        `config:"flag"`
+		Ts     []time.Time     `config:"flag"`
 	}
 
 	tt := &example{}
 	os.Args = []string{"jhon",
 		"-b=True", "-bptr=1", "-i=1", "-iptr=2", "-i8=3", "-i8ptr=4", "-i16=5", "-i16ptr=6", "-i32=7", "-i32ptr=8", "-i64=9", "-i64ptr=10",
-		"-t=2s", "-tptr=3ms", "-u=1", "-uptr=2", "-u8=3", "-u8ptr=4", "-u16=5", "-u16ptr=6", "-u32=7", "-u32ptr=8", "-u64=9", "-u64ptr=10",
+		"-d=2s", "-dptr=3ms", "-u=1", "-uptr=2", "-u8=3", "-u8ptr=4", "-u16=5", "-u16ptr=6", "-u32=7", "-u32ptr=8", "-u64=9", "-u64ptr=10",
 		"-f32=11", "-f32ptr=12", "-f64=13", "-f64ptr=14", "-s=a", "-sptr=b", "-bs=1", "-bs=0", "-bs=1", "-bytes=AQIDBAoL",
-		"-e=2020-09-30T22:51:49-08:00", "-eptr=2020-09-30T22:51:49-08:00",
+		"-t=2020-09-30T22:51:49-08:00", "-tptr=2020-09-30T22:51:49-08:00", "-is=2", "-is=3", "-i64s=4", "-i64s=5", "-us=5", "-us=6",
+		"-u64s=6", "-u64s=7", "-f32s=7", "-f32s=8", "-f64s=8", "-f64s=9", "-ss=abc", "-ss=defg", "-ts=2020-09-30T22:51:49-08:00",
+		"-ts=2021-09-30T22:51:49-08:00", "-ds=2s", "-ds=5m",
 	}
 
 	si, err := getStructInfo(tt, nil)
@@ -77,8 +88,8 @@ func TestSetFunc(t *testing.T) {
 		I32ptr: i32(int32(8)),
 		I64:    int64(9),
 		I64ptr: i64(int64(10)),
-		T:      2 * time.Second,
-		Tptr:   tptr(time.Millisecond * 3),
+		D:      2 * time.Second,
+		Dptr:   tptr(time.Millisecond * 3),
 		U:      uint(1),
 		Uptr:   u(uint(2)),
 		U8:     uint8(3),
@@ -95,10 +106,19 @@ func TestSetFunc(t *testing.T) {
 		F64ptr: f64(float64(14)),
 		S:      "a",
 		Sptr:   s("b"),
-		E:      time.Date(2020, 9, 30, 22, 51, 49, 0, time.FixedZone("", -28800)),
-		Eptr:   timePtr(time.Date(2020, 9, 30, 22, 51, 49, 0, time.FixedZone("", -28800))),
+		T:      time.Date(2020, 9, 30, 22, 51, 49, 0, time.FixedZone("", -28800)),
+		Tptr:   timePtr(time.Date(2020, 9, 30, 22, 51, 49, 0, time.FixedZone("", -28800))),
 		Bs:     []bool{true, false, true},
 		Bytes:  []byte{0x01, 0x02, 0x03, 0x04, 0x0a, 0x0b},
+		Is:     []int{2, 3},
+		I64s:   []int64{int64(4), int64(5)},
+		Ds:     []time.Duration{2 * time.Second, 5 * time.Minute},
+		Us:     []uint{uint(5), uint(6)},
+		U64s:   []uint64{uint64(6), uint64(7)},
+		F32s:   []float32{float32(7), float32(8)},
+		F64s:   []float64{float64(8), float64(9)},
+		Ss:     []string{"abc", "defg"},
+		Ts:     []time.Time{time.Date(2020, 9, 30, 22, 51, 49, 0, time.FixedZone("", -28800)), time.Date(2021, 9, 30, 22, 51, 49, 0, time.FixedZone("", -28800))},
 	}, tt)
 }
 

@@ -242,14 +242,19 @@ func createSliceSetFunc(k string, val reflect.Value, typ reflect.Type) (func(), 
 		var v stringSliceValue
 		flag.Var(&v, k, "")
 		return func() { val.Set(reflect.ValueOf(v)) }, nil
+	case reflect.Struct:
+		if typ.Elem() == timeType {
+			var v timeSliceValue
+			flag.Var(&v, k, "")
+			return func() { val.Set(reflect.ValueOf(v)) }, nil
+		}
+		return nil, fmt.Errorf("flagProvider/createSliceSetFunc: %w type [%s]", ErrUnsupported, typ.Kind().String())
 	default:
 		return nil, fmt.Errorf("flagProvider/createSliceSetFunc: %w type [%s]", ErrUnsupported, typ.Kind().String())
 	}
 }
 
 type timeValue time.Time
-
-func (t *timeValue) Get() interface{} { return time.Time(*t) }
 
 func (t *timeValue) String() string { return time.Time(*t).String() }
 
@@ -264,8 +269,6 @@ func (t *timeValue) Set(v string) error {
 
 type boolSliceValue []bool
 
-func (b *boolSliceValue) Get() interface{} { return []bool(*b) }
-
 func (b *boolSliceValue) String() string { return fmt.Sprintf("%v", []bool(*b)) }
 
 func (b *boolSliceValue) Set(s string) error {
@@ -278,8 +281,6 @@ func (b *boolSliceValue) Set(s string) error {
 }
 
 type intSliceValue []int
-
-func (i *intSliceValue) Get() interface{} { return []int(*i) }
 
 func (i *intSliceValue) String() string { return fmt.Sprintf("%v", []int(*i)) }
 
@@ -294,8 +295,6 @@ func (i *intSliceValue) Set(s string) error {
 
 type int64SliceValue []int64
 
-func (i *int64SliceValue) Get() interface{} { return []int64(*i) }
-
 func (i *int64SliceValue) String() string { return fmt.Sprintf("%v", []int64(*i)) }
 
 func (i *int64SliceValue) Set(s string) error {
@@ -308,8 +307,6 @@ func (i *int64SliceValue) Set(s string) error {
 }
 
 type durationSliceValue []time.Duration
-
-func (d *durationSliceValue) Get() interface{} { return []time.Duration(*d) }
 
 func (d *durationSliceValue) String() string { return fmt.Sprintf("%v", []time.Duration(*d)) }
 
@@ -324,8 +321,6 @@ func (d *durationSliceValue) Set(s string) error {
 
 type uintSliceValue []uint
 
-func (u *uintSliceValue) Get() interface{} { return []uint(*u) }
-
 func (u *uintSliceValue) String() string { return fmt.Sprintf("%v", []uint(*u)) }
 
 func (u *uintSliceValue) Set(s string) error {
@@ -338,8 +333,6 @@ func (u *uintSliceValue) Set(s string) error {
 }
 
 type uint64SliceValue []uint64
-
-func (u *uint64SliceValue) Get() interface{} { return []uint64(*u) }
 
 func (u *uint64SliceValue) String() string { return fmt.Sprintf("%v", []uint64(*u)) }
 
@@ -354,8 +347,6 @@ func (u *uint64SliceValue) Set(s string) error {
 
 type float32SliceValue []float32
 
-func (f *float32SliceValue) Get() interface{} { return []float32(*f) }
-
 func (f *float32SliceValue) String() string { return fmt.Sprintf("%v", []float32(*f)) }
 
 func (f *float32SliceValue) Set(s string) error {
@@ -368,8 +359,6 @@ func (f *float32SliceValue) Set(s string) error {
 }
 
 type float64SliceValue []float64
-
-func (f *float64SliceValue) Get() interface{} { return []float64(*f) }
 
 func (f *float64SliceValue) String() string { return fmt.Sprintf("%v", []float64(*f)) }
 
@@ -384,8 +373,6 @@ func (f *float64SliceValue) Set(s string) error {
 
 type stringSliceValue []string
 
-func (s *stringSliceValue) Get() interface{} { return []string(*s) }
-
 func (s *stringSliceValue) String() string { return fmt.Sprintf("%v", []string(*s)) }
 
 func (s *stringSliceValue) Set(v string) error {
@@ -395,8 +382,6 @@ func (s *stringSliceValue) Set(v string) error {
 
 type base64StringValue []byte
 
-func (b *base64StringValue) Get() interface{} { return []byte(*b) }
-
 func (b *base64StringValue) String() string { return base64.StdEncoding.EncodeToString([]byte(*b)) }
 
 func (b *base64StringValue) Set(s string) error {
@@ -405,5 +390,18 @@ func (b *base64StringValue) Set(s string) error {
 		return err
 	}
 	*b = bb
+	return nil
+}
+
+type timeSliceValue []time.Time
+
+func (t *timeSliceValue) String() string { return fmt.Sprintf("%v", []time.Time(*t)) }
+
+func (t *timeSliceValue) Set(s string) error {
+	tv, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		return err
+	}
+	*t = append(*t, tv)
 	return nil
 }

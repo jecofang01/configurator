@@ -3,6 +3,7 @@ package configurator
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -254,5 +255,140 @@ func parseDefault(field reflect.StructField, t *tagInfo, v string) error {
 			return fmt.Errorf("%w, either `default` or `default=value` is valid", ErrInvalidTagFormat)
 		}
 	}
+	return nil
+}
+
+func setFieldValue(val reflect.Value, typ reflect.Type, v string) error {
+	switch typ.Kind() {
+	case reflect.Bool:
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return err
+		}
+		val.SetBool(b)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+		i, err := strconv.ParseInt(v, 0, strconv.IntSize)
+		if err != nil {
+			return err
+		}
+		val.SetInt(i)
+	case reflect.Int64:
+		if typ == durationType {
+			i, err := time.ParseDuration(v)
+			if err != nil {
+				return err
+			}
+			val.SetInt(int64(i))
+		} else {
+			i, err := strconv.ParseInt(v, 0, 64)
+			if err != nil {
+				return err
+			}
+			val.SetInt(i)
+		}
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
+		u, err := strconv.ParseUint(v, 0, strconv.IntSize)
+		if err != nil {
+			return err
+		}
+		val.SetUint(u)
+	case reflect.Uint64:
+		u, err := strconv.ParseUint(v, 0, 64)
+		if err != nil {
+			return err
+		}
+		val.SetUint(u)
+	case reflect.Float32, reflect.Float64:
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return err
+		}
+		val.SetFloat(f)
+	case reflect.String:
+		val.SetString(v)
+	case reflect.Ptr:
+		return setPtrValue(val, typ, v)
+	case reflect.Slice:
+		return setSliceValue(val, typ, v)
+	case reflect.Struct:
+		if typ == timeType {
+			t, err := time.Parse(time.RFC3339, v)
+			if err != nil {
+				return err
+			}
+			val.Set(reflect.ValueOf(t))
+		}
+		return fmt.Errorf("setFieldValue: %w type [%s]", ErrUnsupported, typ.Kind().String())
+	default:
+		return fmt.Errorf("setFieldValue: %w type [%s]", ErrUnsupported, typ.Kind().String())
+	}
+	return nil
+}
+
+func setPtrValue(val reflect.Value, typ reflect.Type, v string) error {
+	switch typ.Elem().Kind() {
+	case reflect.Bool:
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return err
+		}
+		val.Set(reflect.ValueOf(&b))
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+		i, err := strconv.ParseInt(v, 0, strconv.IntSize)
+		if err != nil {
+			return err
+		}
+		val.Set(reflect.ValueOf(&i))
+	case reflect.Int64:
+		if typ == durationType {
+			i, err := time.ParseDuration(v)
+			if err != nil {
+				return err
+			}
+			val.Set(reflect.ValueOf(&i))
+		} else {
+			i, err := strconv.ParseInt(v, 0, 64)
+			if err != nil {
+				return err
+			}
+			val.Set(reflect.ValueOf(&i))
+		}
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
+		u, err := strconv.ParseUint(v, 0, strconv.IntSize)
+		if err != nil {
+			return err
+		}
+		val.Set(reflect.ValueOf(&u))
+	case reflect.Uint64:
+		u, err := strconv.ParseUint(v, 0, 64)
+		if err != nil {
+			return err
+		}
+		val.Set(reflect.ValueOf(&u))
+	case reflect.Float32, reflect.Float64:
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return err
+		}
+		val.Set(reflect.ValueOf(&f))
+	case reflect.String:
+		val.Set(reflect.ValueOf(&v))
+	case reflect.Struct:
+		if typ == timePtrType {
+			t, err := time.Parse(time.RFC3339, v)
+			if err != nil {
+				return err
+			}
+			val.Set(reflect.ValueOf(&t))
+		}
+		return fmt.Errorf("setPtrValue: %w type [%s]", ErrUnsupported, typ.Kind().String())
+	default:
+		return fmt.Errorf("setPtrValue: %w type [%s]", ErrUnsupported, typ.Kind().String())
+	}
+	return nil
+}
+
+// TODO
+func setSliceValue(val reflect.Value, typ reflect.Type, v string) error {
 	return nil
 }
